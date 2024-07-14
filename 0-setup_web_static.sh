@@ -1,60 +1,37 @@
 #!/usr/bin/env bash
-# Bash script that sets up your web servers for the deployment of web_static.
+# Script to set up web servers for the deployment of web_static
 
-apt update
-apt install -y curl gnupg2 ca-certificates lsb-release ubuntu-keyring
+# Install Nginx if it is not already installed
+sudo apt-get update
+sudo apt-get -y install nginx
 
-curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
-| sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
-echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
-http://nginx.org/packages/mainline/ubuntu `lsb_release -cs` nginx" \
-    | sudo tee /etc/apt/sources.list.d/nginx.list
-echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" \
-    | sudo tee /etc/apt/preferences.d/99nginx
+# Create necessary directories if they do not exist
+sudo mkdir -p /data/web_static/releases/test/
+sudo mkdir -p /data/web_static/shared/
 
-apt update
-apt -y install nginx
+# Create a fake HTML file to test Nginx configuration
+echo "<html>
+  <head>
+  </head>
+  <body>
+    Holberton School
+  </body>
+</html>" | sudo tee /data/web_static/releases/test/index.html
 
-mkdir -p /data/web_static/shared/
-mkdir -p /data/web_static/releases/test/
-chown -R ubuntu /data/
-chgrp -R ubuntu /data/
-ln -sf /data/web_static/releases/test/ /data/web_static/current
+# Create a symbolic link to the test folder
+if [ -L /data/web_static/current ]; then
+    sudo rm /data/web_static/current
+fi
+sudo ln -s /data/web_static/releases/test/ /data/web_static/current
 
-rm /etc/nginx/conf.d/default.conf
+# Give ownership of /data/ folder to the ubuntu user and group
+sudo chown -R ubuntu:ubuntu /data/
 
-printf %s "<html>
-	<head>
-	</head>
-	<body>
-		Holberton School
-	</body>
-</html>" > /data/web_static/releases/test/index.html
+# Update Nginx configuration to serve the content of /data/web_static/current/ to hbnb_static
+sudo sed -i '/server_name _;/a \\n\tlocation /hbnb_static/ {\n\t\talias /data/web_static/current/;\n\t}' /etc/nginx/sites-available/default
 
-printf %s "server {
-	listen 80 backlog=4096 default_server;
-	#server_name  web-01.dakhamed-dom.tech;
-	add_header X-Served-By "$HOSTNAME";
-	
-	location / {
-		root /home/ubuntu/projects/web_app/alx/html;
-		index  index.html;
-	}
-	
-	error_page  404              /404.html;
+# Restart Nginx to apply changes
+sudo service nginx restart
 
-	location /hbnb_static {
-		alias /data/web_static/current;
-		index index.html;
-	}
-
-	error_page   500 502 503 504  /50x.html;
-	location = /50x.html {
-		root   /usr/share/nginx/html;
-	}
-}" > /etc/nginx/conf.d/default.conf
-
-sysctl -w net.core.somaxconn=4096
-echo "net.core.somaxconn = 4096" >> /etc/sysctl.conf
-
-service nginx restart
+# Exit successfully
+exit 0
