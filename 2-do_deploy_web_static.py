@@ -6,7 +6,7 @@ Fabric script to distribute an archive to web servers
 from fabric.api import env, put, run
 import os
 
-env.hosts = ['52.7.166.204', '52.91.146.234']  # Replace with your web servers' IPs
+env.hosts = ['52.7.166.204', '52.91.146.234']  # Replace with your web' IPs
 env.user = 'ubuntu'
 
 
@@ -39,7 +39,7 @@ def do_deploy(archive_path):
         # Delete the archive from the web server
         run('rm /tmp/{}'.format(file_name))
 
-        # Move the contents out of the web_static folder to the parent directory
+        # Move the contents out of the web_static folder to parent directory
         run('mv {}/web_static/* {}'.format(release_path, release_path))
 
         # Delete the web_static directory created by the archive extraction
