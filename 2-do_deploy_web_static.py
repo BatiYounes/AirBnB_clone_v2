@@ -1,56 +1,57 @@
 #!/usr/bin/python3
 """
-Fabric script to distribute an archive to web servers
+Fabric script that distributes an archive to web servers
 """
 
 from fabric.api import env, put, run
 import os
 
-env.hosts = ['52.7.166.204', '52.91.146.234']  # Replace with your web' IPs
-env.user = 'ubuntu'
+env.hosts = ['52.7.166.204', '52.91.146.234']  # IPs of your web servers
+env.user = 'ubuntu'  # SSH username
+env.key_filename = '~/.ssh/new_key'  # Path to your SSH private key
 
 
 def do_deploy(archive_path):
     """
     Distributes an archive to web servers.
-    Args:
-        archive_path (str): The path to the archive to distribute.
-    Returns:
-        bool: True if all operations have been done correctly, otherwise False.
     """
     if not os.path.exists(archive_path):
         return False
 
     try:
-        # Get the archive file name without the extension
-        file_name = os.path.basename(archive_path)
-        no_ext = file_name.split('.')[0]
+        # Extract archive filename without extension
+        archive_filename = os.path.basename(archive_path)
+        archive_basename = archive_filename.split(".")[0]
 
-        # Upload the archive to the /tmp/ directory of the web server
-        put(archive_path, '/tmp/')
+        # Upload archive to /tmp/ directory on web server
+        put(archive_path, "/tmp/{}".format(archive_filename))
 
-        # Create the directory to uncompress the archive
-        release_path = '/data/web_static/releases/{}'.format(no_ext)
-        run('mkdir -p {}'.format(release_path))
+        # Create target directory
+        run("mkdir -p /data/web_static/releases/{}/".format(archive_basename))
 
         # Uncompress the archive to the folder
-        run('tar -xzf /tmp/{} -C {}'.format(file_name, release_path))
+        run("tar -xzf /tmp/{} -C /data/web_static/releases/{}/".format(archive_filename, archive_basename))
 
-        # Delete the archive from the web server
-        run('rm /tmp/{}'.format(file_name))
+        # Remove the uploaded archive
+        run("rm /tmp/{}".format(archive_filename))
 
-        # Move the contents out of the web_static folder to parent directory
-        run('mv {}/web_static/* {}'.format(release_path, release_path))
+        # Move contents from web_static to the parent directory
+        run("mv /data/web_static/releases/{}/web_static/* /data/web_static/releases/{}/".format(archive_basename, archive_basename))
 
-        # Delete the web_static directory created by the archive extraction
-        run('rm -rf {}/web_static'.format(release_path))
+        # Remove the now-empty web_static directory
+        run("rm -rf /data/web_static/releases/{}/web_static".format(archive_basename))
 
-        # Delete the symbolic link /data/web_static/current
-        run('rm -rf /data/web_static/current')
+        # Remove the current symbolic link
+        run("rm -rf /data/web_static/current")
 
         # Create a new symbolic link
-        run('ln -s {} /data/web_static/current'.format(release_path))
+        run("ln -s /data/web_static/releases/{}/ /data/web_static/current".format(archive_basename))
+
+        # Set permissions
+        run("chmod -R 755 /data/web_static/releases/{}/".format(archive_basename))
 
         return True
-    except Exception:
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
         return False
