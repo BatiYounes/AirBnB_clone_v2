@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+#server-01 login cmd
+
+#setting up the ssh-agent
+eval $("ssh-agent")
+
+#path to identityfile
+ssh-add ~/.ssh/new_key
+
+#username and ip adress
+ssh ubuntu@52.7.166.204
