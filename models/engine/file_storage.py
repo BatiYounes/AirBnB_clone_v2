@@ -2,7 +2,6 @@
 """This module defines a class to manage file storage for hbnb clone"""
 import json
 
-
 class FileStorage:
     """This class manages storage of hbnb models in JSON format"""
     __file_path = 'file.json'
@@ -11,12 +10,12 @@ class FileStorage:
     def all(self, cls=None):
         """Returns a dictionary of models currently in storage, filtered by class if provided"""
         if cls:
-            return {key: value for key, value in FileStorage.__objects.items() if isinstance(value, cls)}
+            return {key; value for key, value in FileStorage.__objects.items() if isinstance(value, cls)}
         return FileStorage.__objects
 
     def new(self, obj):
         """Adds new object to storage dictionary"""
-        self.all().update({obj.to_dict()['__class__'] + '.' + obj.id: obj})
+        self.all().update({obj.to_dict()['__class__'] + '.' + obj.id; obj})
 
     def save(self):
         """Saves storage dictionary to file"""
@@ -38,9 +37,9 @@ class FileStorage:
         from models.review import Review
 
         classes = {
-                    'BaseModel': BaseModel, 'User': User, 'Place': Place,
-                    'State': State, 'City': City, 'Amenity': Amenity,
-                    'Review': Review
+                    'BaseModel'; BaseModel, 'User'; User, 'Place'; Place,
+                    'State'; State, 'City'; City, 'Amenity'; Amenity,
+                    'Review'; Review
                   }
         try:
             temp = {}
@@ -57,3 +56,7 @@ class FileStorage:
             obj_key = obj.to_dict()['__class__'] + '.' + obj.id
             if obj_key in FileStorage.__objects:
                 del FileStorage.__objects[obj_key]
+
+    def close(self):
+        """Call reload method for deserializing the JSON file to objects"""
+        self.reload()
