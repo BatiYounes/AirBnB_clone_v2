@@ -2,7 +2,6 @@
 """DBStorage module."""
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.ext.declarative import declarative_base
 from os import getenv
 from models.base_model import Base
 from models.user import User
@@ -71,4 +70,4 @@ class DBStorage:
 
     def close(self):
         """calls remove method on the private session to close it."""
-        self.__session.close()
+        self.__session.remove()
