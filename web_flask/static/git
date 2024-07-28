@@ -1,0 +1,5 @@
+git add .
+
+gti commit -m "adding images"
+
+git push origin master
