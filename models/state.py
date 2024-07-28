@@ -16,22 +16,11 @@ class State(BaseModel, Base):
     """
     __tablename__ = "states"
     name = Column(String(128), nullable=False)
-    cities = relationship("City", cascade='all, delete, delete-orphan',
-                          backref="state")
+    cities = relationship("City", cascade='all, delete, delete-orphan', backref="state")
 
-    @property
-    def cities(self):
-        """return the list of City objects from storage linked to the
-        current State."""
-        obj = models.storage.all()
-        list_of_cities = []
-        return_list_of_cities = []
-        for key in obj:
-            city_obj = key.replace('.', ' ')
-            city_obj = shlex.split(city_obj)
-            if city_obj[0] == 'City':
-                list_of_cities.append(obj[key])
-        for val in list_of_cities:
-            if val.state_id == self.id:
-                return_list_of_cities.append(val)
-        return return_list_of_cities
+    if models.storage_t != 'db':
+        @property
+        def cities(self):
+            """Return the list of City objects from storage linked to the current State."""
+            obj_dict = models.storage.all(City)
+            return [city for city in obj_dict.values() if city.state_id == self.id]
